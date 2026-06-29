@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>恋爱记录</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-art" src="memory-board.png" alt="" />
+          <div>
+            <p class="eyebrow">Love Log</p>
+            <h1>恋爱记录</h1>
+          </div>
+        </div>
+        <div class="top-actions" aria-label="记录操作">
+          <button class="secondary-button" id="exportBtn" type="button">导出</button>
+          <button class="danger-button" id="clearBtn" type="button">清空</button>
+        </div>
+      </header>
+
+      <section class="metrics" aria-label="记录概览">
+        <div class="metric">
+          <span class="metric-value" id="totalCount">0</span>
+          <span class="metric-label">全部</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value" id="pendingCount">0</span>
+          <span class="metric-label">未沟通</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value" id="revisitCount">0</span>
+          <span class="metric-label">需再聊</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value" id="talkRate">0%</span>
+          <span class="metric-label">已沟通</span>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <section class="entry-area" aria-label="填写恋爱记录">
+          <form class="record-form" id="recordForm">
+            <input type="hidden" id="recordId" />
+
+            <div class="form-row">
+              <label for="recordDate">日期</label>
+              <input id="recordDate" name="recordDate" type="date" required />
+            </div>
+
+            <div class="form-row">
+              <label for="mood">今天的感觉</label>
+              <div class="range-line">
+                <input id="mood" name="mood" type="range" min="1" max="5" value="3" />
+                <output id="moodValue" for="mood">平稳</output>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label for="happyText">开心的事情</label>
+              <textarea id="happyText" name="happyText" rows="5" placeholder="今天让我觉得被喜欢、被照顾、很开心的事"></textarea>
+            </div>
+
+            <div class="form-row">
+              <label for="sadText">不开心的事情</label>
+              <textarea id="sadText" name="sadText" rows="5" placeholder="今天让我委屈、难过、需要被看见的事"></textarea>
+            </div>
+
+            <fieldset class="status-field">
+              <legend>有没有沟通</legend>
+              <label>
+                <input type="radio" name="talkStatus" value="talked" />
+                <span>已沟通</span>
+              </label>
+              <label>
+                <input type="radio" name="talkStatus" value="pending" checked />
+                <span>未沟通</span>
+              </label>
+              <label>
+                <input type="radio" name="talkStatus" value="revisit" />
+                <span>需再聊</span>
+              </label>
+            </fieldset>
+
+            <div class="form-row">
+              <label for="talkText">沟通内容 / 下一步</label>
+              <textarea id="talkText" name="talkText" rows="4" placeholder="说了什么、还想怎么说、希望对方知道什么"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button class="primary-button" id="saveBtn" type="submit">保存记录</button>
+              <button class="secondary-button hidden" id="cancelEditBtn" type="button">取消编辑</button>
+            </div>
+
+            <p class="form-message" id="formMessage" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="journal-area" aria-label="恋爱记录列表">
+          <div class="journal-toolbar">
+            <div class="filters" role="tablist" aria-label="筛选沟通状态">
+              <button class="filter-button active" type="button" data-filter="all">全部</button>
+              <button class="filter-button" type="button" data-filter="pending">未沟通</button>
+              <button class="filter-button" type="button" data-filter="revisit">需再聊</button>
+              <button class="filter-button" type="button" data-filter="talked">已沟通</button>
+            </div>
+            <label class="search-box" for="searchInput">
+              <span>搜索</span>
+              <input id="searchInput" type="search" placeholder="关键词" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="record-list" id="recordList"></div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
