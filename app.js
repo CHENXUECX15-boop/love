@@ -4,6 +4,7 @@ const state = {
   entries: [],
   filter: "all",
   search: "",
+  expandedMonths: new Set(),
 };
 
 const els = {
@@ -96,6 +97,34 @@ function formatDate(value) {
   }).format(date);
 }
 
+function monthKeyFromDate(value) {
+  if (!value || value.length < 7) {
+    return "unknown";
+  }
+
+  return value.slice(0, 7);
+}
+
+function currentMonthKey() {
+  return monthKeyFromDate(today());
+}
+
+function formatMonth(value) {
+  if (value === "unknown") {
+    return "未填写月份";
+  }
+
+  const date = new Date(`${value}-01T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return "未填写月份";
+  }
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "long",
+  }).format(date);
+}
+
 function updateMoodLabel() {
   els.moodValue.value = moodText[els.mood.value] || "平稳";
   els.moodValue.textContent = els.moodValue.value;
@@ -164,6 +193,36 @@ function visibleEntries() {
   });
 }
 
+function groupEntriesByMonth(entries) {
+  const groups = [];
+  const byKey = new Map();
+
+  for (const entry of entries) {
+    const key = monthKeyFromDate(entry.date);
+    let group = byKey.get(key);
+
+    if (!group) {
+      group = { key, entries: [] };
+      byKey.set(key, group);
+      groups.push(group);
+    }
+
+    group.entries.push(entry);
+  }
+
+  return groups;
+}
+
+function toggleMonth(key) {
+  if (state.expandedMonths.has(key)) {
+    state.expandedMonths.delete(key);
+  } else {
+    state.expandedMonths.add(key);
+  }
+
+  renderEntries();
+}
+
 function updateMetrics() {
   const total = state.entries.length;
   const pending = state.entries.filter((entry) => entry.talkStatus === "pending").length;
@@ -203,7 +262,46 @@ function renderEntries() {
     return;
   }
 
-  for (const entry of entries) {
+  for (const group of groupEntriesByMonth(entries)) {
+    const month = document.createElement("section");
+    month.className = "month-group";
+
+    const isExpanded = state.expandedMonths.has(group.key);
+    month.classList.toggle("collapsed", !isExpanded);
+
+    const monthToggle = document.createElement("button");
+    monthToggle.className = "month-toggle";
+    monthToggle.type = "button";
+    monthToggle.setAttribute("aria-expanded", String(isExpanded));
+    monthToggle.addEventListener("click", () => toggleMonth(group.key));
+
+    const monthTitle = document.createElement("span");
+    monthTitle.className = "month-title";
+    monthTitle.textContent = formatMonth(group.key);
+
+    const monthCount = document.createElement("span");
+    monthCount.className = "month-count";
+    monthCount.textContent = `${group.entries.length} 条记录`;
+
+    const monthCaret = document.createElement("span");
+    monthCaret.className = "month-caret";
+    monthCaret.setAttribute("aria-hidden", "true");
+    monthCaret.textContent = "⌄";
+
+    monthToggle.append(monthTitle, monthCount, monthCaret);
+
+    const monthRecords = document.createElement("div");
+    monthRecords.className = "month-records";
+    monthRecords.hidden = !isExpanded;
+
+    month.append(monthToggle, monthRecords);
+
+    if (!isExpanded) {
+      els.list.append(month);
+      continue;
+    }
+
+    for (const entry of group.entries) {
     const card = document.createElement("article");
     card.className = "record-card";
 
@@ -256,7 +354,10 @@ function renderEntries() {
       createRecordSection("沟通内容 / 下一步", entry.talk),
       actions,
     );
-    els.list.append(card);
+      monthRecords.append(card);
+    }
+
+    els.list.append(month);
   }
 }
 
@@ -272,6 +373,7 @@ function handleSubmit(event) {
 
   const now = new Date().toISOString();
   const editingId = els.recordId.value;
+  state.expandedMonths.add(monthKeyFromDate(data.date));
 
   if (editingId) {
     state.entries = state.entries.map((entry) =>
@@ -405,6 +507,7 @@ function bindEvents() {
 
 function init() {
   loadEntries();
+  state.expandedMonths.add(currentMonthKey());
   bindEvents();
   resetForm();
   renderEntries();
